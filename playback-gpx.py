@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-import sys
 import logging
 from optparse import OptionParser
 import os
@@ -12,18 +11,31 @@ from subprocess import check_output
 # python playback-gpx.py -i 1 -r "-r 192.168.56.102" "docs/North On Topanga(1).gpx"
 # python playback-gpx.py -i 1 -r "-r 192.168.56.101" "docs/South On Topanga(1).gpx"
 
+# 07/29/2016
+# added requirements.txt
+# Fix "Returned non-zero exit status" error
+# Fix indentation
+
 # 08/21/2014
 # added returnDefaultPath function so the script is more os independent
 # added -r option so users can pass extra flags to geanyshell like an ip address
 # added ability to pause execution of script with keyboard interrupt
 
+
+def format_decimal(num):
+    if num is None:
+        return str(0)
+    return str(num).replace('.', ',')
+
+
 def returnDefaultPath():
     if(platform.system() == 'Linux'):
-      return "/usr/bin/geanyshell"
+        return "/usr/bin/genyshell"
     elif(platform.system() == 'Windows'):
-      return "C:\Program Files\Genymobile\Genymotion\genyshell.exe"
+        return "C:\Program Files\Genymobile\Genymotion\genyshell.exe"
     elif(platform.system() == 'Darwin'):
-      return "/Applications/Genymotion Shell.app/Contents/MacOS/genyshell"
+        return "/Applications/Genymotion Shell.app/Contents/MacOS/genyshell"
+
 
 def process_file(path, options):
     logging.info("processing " + path)
@@ -36,14 +48,14 @@ def process_file(path, options):
             for point in segment.points:
                 set_point(point, options)
                 try:
-                  time.sleep(options.interval)
+                    time.sleep(options.interval)
                 except KeyboardInterrupt:
-                  print '\nPausing...  (Hit ENTER to continue, type quit or exit.)'
-                  response = raw_input()
-                  if (response == 'quit') or (response == 'exit'):
-                    exit()
-                  else:
-                    continue
+                    print '\nPausing...  (Hit ENTER to continue, type quit or exit.)'
+                    response = raw_input()
+                    if (response == 'quit') or (response == 'exit'):
+                        exit()
+                    else:
+                        continue
 
     for route in gpx.routes:
         for point in route:
@@ -53,22 +65,21 @@ def process_file(path, options):
 
 def set_point(point, options):
     try:
-      logging.info('Point at ({0},{1},{2})'.format(point.latitude, point.longitude, point.elevation))
-      logging.debug(check_output([options.command, "-c", "gps setlatitude " + str(point.latitude), options.ipaddress]))
-      logging.debug(check_output([options.command, "-c", "gps setlongitude " + str(point.longitude), options.ipaddress]))
-      logging.debug(check_output([options.command, "-c", "gps setaltitude " + str(point.elevation), options.ipaddress]))
+        logging.info('Point at ({0},{1},{2})'.format(point.latitude, point.longitude, point.elevation))
+        logging.debug(check_output([options.command, "-c", "gps setlatitude " + format_decimal(point.latitude), options.ipaddress]))
+        logging.debug(check_output([options.command, "-c", "gps setlongitude " + format_decimal(point.longitude), options.ipaddress]))
+        logging.debug(check_output([options.command, "-c", "gps setaltitude " + format_decimal(point.elevation), options.ipaddress]))
     except KeyboardInterrupt:
-      print '\nPausing...  (Hit ENTER to continue, type quit or exit.)'
-      try:
-        response = raw_input()
-        if (response == 'quit') or (response == 'exit'):
-          exit()
-        print 'Resuming...'
-      except KeyboardInterrupt:
-        print 'Resuming...'
+        print '\nPausing...  (Hit ENTER to continue, type quit or exit.)'
+        try:
+            response = raw_input()
+            if (response == 'quit') or (response == 'exit'):
+                exit()
+            print 'Resuming...'
+        except KeyboardInterrupt:
+            print 'Resuming...'
 
-
-if __name__=='__main__':
+if __name__ == '__main__':
     usage = "usage: %prog "
     parser = OptionParser(usage=usage,
         description="Read a gpx file and use it to send points to Genymotion emulator at a fixed interval")
